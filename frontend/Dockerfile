@@ -8,15 +8,15 @@ WORKDIR /app
 # CI environment default cannot silently skip them.
 ENV NODE_ENV=development
 
-# Copy manifests first for layer-cache efficiency, then install ALL deps
-# (including devDependencies) with --include=dev so "vite build" is available.
-COPY package.json ./
-RUN npm install --include=dev
+# Copy manifests + lockfile first for layer-cache efficiency.
+# npm ci: deterministic, uses exact versions from package-lock.json, includes devDeps.
+COPY package.json package-lock.json ./
+RUN npm ci
 
 # Copy the rest of the source tree (index.html, src/, vite.config.js, etc.)
 COPY . .
 
-# Compile — Vite outputs to /app/dist by default
+# Compile — Vite 5.4.0 (pinned) outputs to /app/dist
 RUN npm run build
 
 # ── Stage 2: Serve ───────────────────────────────────────────────────────────
